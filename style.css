@@ -1,1 +1,181 @@
+// ゲームの状態管理
+const game = {
+    timer: 180,
+    interval: null,
+    score: 0,
+    state: 'MENU', // MENU, LOCK, HOME, HACK, RESULT
+    lockCode: "1995", // 初期のロックパスワード（モック）
+    lockInput: "",
+    unlockedApps: [],
+    currentApp: null,
 
+    // アプリデータ（モック）
+    apps: [
+        { id: 'game1', name: 'ブロスタ', icon: '🎮', difficulty: 'low', points: 20, time: 20, pass: '1234' },
+        { id: 'sns1', name: 'Instagram', icon: '📸', difficulty: 'mid', points: 45, time: 35, pass: 'password' },
+        { id: 'bank1', name: 'みずほ銀行', icon: '🏦', difficulty: 'high', points: 60, time: 60, pass: 'money2025' },
+        { id: 'msg1', name: 'LINE', icon: '💬', difficulty: 'mid', points: 45, time: 30, pass: 'love' },
+    ],
+
+    // 初期化
+    init: function() {
+        this.updateClock();
+        setInterval(() => this.updateClock(), 60000);
+    },
+
+    updateClock: function() {
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+        document.getElementById('clock-display').innerText = timeStr;
+    },
+
+    // 画面切り替え
+    switchScreen: function(screenId) {
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    },
+
+    // シングルプレイ開始
+    startSinglePlayer: function() {
+        this.score = 0;
+        this.timer = 180;
+        this.unlockedApps = [];
+        this.lockInput = "";
+        
+        this.switchScreen('screen-lock');
+        this.startTimer();
+        this.updateLockDisplay();
+        
+        // ロック画面のヒント初期表示（モック）
+        document.getElementById('lock-hint').innerText = "AI: このユーザーは1990年代生まれのようです...";
+    },
+
+    startTimer: function() {
+        if(this.interval) clearInterval(this.interval);
+        this.interval = setInterval(() => {
+            this.timer--;
+            document.getElementById('game-timer').innerText = this.timer;
+            
+            // 時間経過によるヒントなどのイベントをここに記述
+            
+            if (this.timer <= 0) {
+                this.endGame();
+            }
+        }, 1000);
+    },
+
+    // ロック画面ロジック
+    inputLock: function(num) {
+        if (this.lockInput.length < 4) {
+            this.lockInput += num;
+            this.updateLockDisplay();
+        }
+        if (this.lockInput.length === 4) {
+            setTimeout(() => this.checkLock(), 300);
+        }
+    },
+
+    clearLock: function() {
+        this.lockInput = "";
+        this.updateLockDisplay();
+    },
+
+    updateLockDisplay: function() {
+        let display = "";
+        for(let i=0; i<4; i++) {
+            if (i < this.lockInput.length) display += "● ";
+            else display += "○ ";
+        }
+        document.getElementById('lock-input-display').innerText = display;
+    },
+
+    checkLock: function() {
+        if (this.lockInput === this.lockCode) {
+            // ロック解除成功
+            this.score += 30; // 基本点
+            // ボーナス計算ロジックはここに追加
+            this.updateScore();
+            this.setupHomeScreen();
+            this.switchScreen('screen-home');
+        } else {
+            // 失敗
+            alert("パスコードが違います"); // 実際はアニメーションにする
+            this.lockInput = "";
+            this.updateLockDisplay();
+        }
+    },
+
+    // ホーム画面構築
+    setupHomeScreen: function() {
+        const grid = document.getElementById('app-grid');
+        grid.innerHTML = "";
+        this.apps.forEach(app => {
+            const isHacked = this.unlockedApps.includes(app.id);
+            const el = document.createElement('div');
+            el.className = 'app-icon';
+            el.innerHTML = `
+                <div class="icon-img ${isHacked ? 'hacked' : ''}">${app.icon}</div>
+                <div class="app-name">${app.name}</div>
+            `;
+            if (!isHacked) {
+                el.onclick = () => this.openAppHack(app);
+            }
+            grid.appendChild(el);
+        });
+    },
+
+    // アプリ解読画面
+    openAppHack: function(app) {
+        this.currentApp = app;
+        this.switchScreen('screen-hack');
+        document.getElementById('hack-target-name').innerText = app.name;
+        document.getElementById('hack-target-icon').innerText = app.icon;
+        document.getElementById('hack-input').value = "";
+        document.getElementById('hack-logs').innerHTML = "> 接続確立...<br>> 解析開始...";
+        document.getElementById('hack-hint-text').innerText = "AI: パスワードのパターンを分析中...";
+    },
+
+    returnToHome: function() {
+        this.currentApp = null;
+        this.switchScreen('screen-home');
+    },
+
+    submitHack: function() {
+        const input = document.getElementById('hack-input').value;
+        if (input === this.currentApp.pass) {
+            // 正解
+            this.score += this.currentApp.points;
+            this.unlockedApps.push(this.currentApp.id);
+            this.updateScore();
+            this.setupHomeScreen(); // アイコン状態更新
+            this.returnToHome();
+        } else {
+            alert("パスワードが違います");
+            document.getElementById('hack-logs').innerHTML += "<br>> <span style='color:red'>認証失敗</span>";
+        }
+    },
+
+    updateScore: function() {
+        document.getElementById('current-score').innerText = `Score: ${this.score}`;
+    },
+
+    // ゲーム終了
+    endGame: function() {
+        clearInterval(this.interval);
+        this.switchScreen('screen-result');
+        document.getElementById('final-score').innerText = this.score;
+        
+        // 悪用ストーリー表示（モック）
+        let story = "あなたの情報は守られました... と言いたいところですが、";
+        if (this.unlockedApps.length > 0) {
+            story += `${this.unlockedApps.length}つのアカウントが侵害されました。\n`;
+            story += "SNSアカウントが乗っ取られ、友人にスパムメッセージが送信されました。";
+        } else {
+            story = "時間切れにより、完全な侵入は防がれましたが、スマホのロックは解除されました。";
+        }
+        document.getElementById('story-text').innerText = story;
+    },
+};
+
+// ゲーム初期化
+window.onload = () => game.init();
