@@ -1,1 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Guardian Game</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for digital look -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
 
+    <div class="phone-container">
+        <!-- ステータスバー（共通） -->
+        <div class="status-bar">
+            <span id="clock-display">12:00</span>
+            <div class="status-icons">
+                <span>5G</span>
+                <span>100%</span>
+            </div>
+        </div>
+
+        <!-- 1. メニュー画面 -->
+        <div id="screen-menu" class="screen active">
+            <div class="menu-content">
+                <h1>Privacy<br>Guardian</h1>
+                <p class="subtitle">ハッカー体験型セキュリティ教育ゲーム</p>
+                <div class="menu-buttons">
+                    <button onclick="game.startSinglePlayer()">シングルプレイ開始</button>
+                    <button class="disabled">マルチプレイ (Dev)</button>
+                    <button class="secondary" onclick="alert('ルール：180秒以内にパスワードを解読し、ハイスコアを目指せ！')">ルール確認</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. ロック画面（フェーズA） -->
+        <div id="screen-lock" class="screen">
+            <div class="lock-ui">
+                <div class="lock-icon">🔒</div>
+                <div class="passcode-display" id="lock-input-display">Enter Passcode</div>
+                <div class="numpad">
+                    <button onclick="game.inputLock(1)">1</button>
+                    <button onclick="game.inputLock(2)">2</button>
+                    <button onclick="game.inputLock(3)">3</button>
+                    <button onclick="game.inputLock(4)">4</button>
+                    <button onclick="game.inputLock(5)">5</button>
+                    <button onclick="game.inputLock(6)">6</button>
+                    <button onclick="game.inputLock(7)">7</button>
+                    <button onclick="game.inputLock(8)">8</button>
+                    <button onclick="game.inputLock(9)">9</button>
+                    <button class="transparent"></button>
+                    <button onclick="game.inputLock(0)">0</button>
+                    <button class="backspace" onclick="game.clearLock()">C</button>
+                </div>
+                <div class="hint-box" id="lock-hint">
+                    ヒント: 読み込み中...
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. ホーム画面（アプリ選択 フェーズB） -->
+        <div id="screen-home" class="screen">
+            <div class="header">
+                <span id="game-timer">180</span>s
+                <span id="current-score">Score: 0</span>
+            </div>
+            <div class="app-grid" id="app-grid">
+                <!-- JSでアプリアイコンを生成 -->
+            </div>
+        </div>
+
+        <!-- 4. アプリ解読画面 -->
+        <div id="screen-hack" class="screen">
+            <div class="hack-header">
+                <button onclick="game.returnToHome()">Done</button>
+                <span id="hack-target-name">App Name</span>
+            </div>
+            <div class="hack-content">
+                <div class="hack-icon" id="hack-target-icon"></div>
+                <div class="password-field">
+                    <input type="text" id="hack-input" placeholder="パスワードを入力" autocomplete="off">
+                    <button onclick="game.submitHack()">解除</button>
+                </div>
+                <div class="terminal-logs" id="hack-logs">
+                    > 接続確立...<br>
+                    > 暗号化方式を解析中...
+                </div>
+                <div class="ai-hint-area">
+                    <div class="ai-avatar">AI</div>
+                    <div class="ai-message" id="hack-hint-text">解析を開始します...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 結果画面 -->
+        <div id="screen-result" class="screen">
+            <h2>HACK COMPLETE</h2>
+            <div class="score-display">
+                <span class="score-label">Total Score</span>
+                <span class="score-value" id="final-score">0</span>
+            </div>
+            
+            <div class="story-container">
+                <div class="story-image-placeholder">
+                    [AI Generated Image]
+                </div>
+                <p id="story-text" class="typewriter">
+                    結果を集計中...
+                </p>
+            </div>
+
+            <button onclick="location.reload()">タイトルに戻る</button>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
